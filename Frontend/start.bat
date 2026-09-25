@@ -1,0 +1,3 @@
+@echo off
+echo [FlowTrack] Starting Frontend dev server on port 5173...
+npm run dev

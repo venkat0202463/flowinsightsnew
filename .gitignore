@@ -1,0 +1,46 @@
+# Environment files
+.env
+*.env
+.env.*
+**/.env
+**/Backend/.env
+**/Frontend/.env
+**/frontend/.env
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Backend
+target/
+**/target/
+Backend/target/
+Backend/*.log
+Backend/backend_log.txt
+Backend/debug_log.txt
+Backend/error_log.txt
+Backend/error_log_nopass.txt
+Backend/error_log_root.txt
+
+# Frontend
+dist/
+**/dist/
+Frontend/node_modules/
+Frontend/dist/
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Scratch / Temp Tools
+.scannerwork/
+scratch/
