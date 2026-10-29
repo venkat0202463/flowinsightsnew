@@ -17,8 +17,20 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 // as per security guideline 2e, 2g, and 14
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const stored = sessionStorage.getItem('user') || localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hasToken = !!(params.get('scaloz_token') || params.get('token') || params.get('sso_token') || params.get('access_token'));
+    const stored = sessionStorage.getItem('user') || localStorage.getItem('user');
+    return hasToken || !stored;
+  });
 
   useEffect(() => {
     const initAuth = async () => {

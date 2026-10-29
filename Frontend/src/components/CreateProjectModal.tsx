@@ -31,7 +31,11 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
     deadline: '',
     projectType: 'KANBAN',
     category: 'Software',
-    teamMembers: [] as User[]
+    teamMembers: [] as User[],
+    totalBudget: 0,
+    contingencyPercent: 0,
+    defaultHourlyRate: 0,
+    budgetAllocationMethod: 'STORY_POINT_WEIGHTED'
   });
 
   const [activeUserIndex, setActiveUserIndex] = useState(0);
@@ -57,7 +61,11 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
           deadline: projectToEdit.deadline || '',
           projectType: projectToEdit.projectType || 'KANBAN',
           category: projectToEdit.category || 'Software',
-          teamMembers: projectToEdit.teamMembers || []
+          teamMembers: projectToEdit.teamMembers || [],
+          totalBudget: projectToEdit.totalBudget || 0,
+          contingencyPercent: projectToEdit.contingencyPercent || 0,
+          defaultHourlyRate: projectToEdit.defaultHourlyRate || 0,
+          budgetAllocationMethod: projectToEdit.budgetAllocationMethod || 'STORY_POINT_WEIGHTED'
         });
         setSelectedLead(projectToEdit.createdBy || authUser || null);
       } else {
@@ -81,7 +89,20 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
   };
 
   const resetForm = () => {
-    setNewProject({ name: '', description: '', objective: '', teamSize: 1, deadline: '', projectType: 'KANBAN', category: 'Software', teamMembers: [] });
+    setNewProject({
+      name: '',
+      description: '',
+      objective: '',
+      teamSize: 1,
+      deadline: '',
+      projectType: 'KANBAN',
+      category: 'Software',
+      teamMembers: [],
+      totalBudget: 0,
+      contingencyPercent: 0,
+      defaultHourlyRate: 0,
+      budgetAllocationMethod: 'STORY_POINT_WEIGHTED'
+    });
     setSelectedLead(authUser || null);
     setDeadlineError(false);
     setLeadSearch('');
@@ -342,9 +363,8 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
                           <div
                             key={user.id}
                             id={`dropdown-lead-${idx}`}
-                            className={`px-3 py-2.5 hover:bg-[#DEEBFF] cursor-pointer flex items-center justify-between border-b border-[#F4F5F7] last:border-none ${
-                              activeLeadIndex === idx ? 'bg-[#DEEBFF]' : ''
-                            }`}
+                            className={`px-3 py-2.5 hover:bg-[#DEEBFF] cursor-pointer flex items-center justify-between border-b border-[#F4F5F7] last:border-none ${activeLeadIndex === idx ? 'bg-[#DEEBFF]' : ''
+                              }`}
                             onMouseEnter={() => setActiveLeadIndex(idx)}
                             onClick={() => {
                               setSelectedLead(user);
@@ -575,6 +595,68 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
                   value={newProject.objective}
                   onChange={e => setNewProject({ ...newProject, objective: e.target.value })}
                 />
+              </div>
+
+              {/* Financial & Budget Planning */}
+              <div className="pt-2 border-t border-[#DFE1E6] space-y-4">
+                <h4 className="text-xs font-bold text-[#172B4D] uppercase tracking-wider">Financial & Budget Planning</h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-[#5E6C84]">Total Budget (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full bg-white border-2 border-[#DFE1E6] rounded-[3px] py-2 px-3 text-sm font-bold outline-none focus:border-[#4C9AFF]"
+                      placeholder="e.g. 100000"
+                      value={newProject.totalBudget || ''}
+                      onChange={e => setNewProject({ ...newProject, totalBudget: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-[#5E6C84]">Contingency Reserve (%)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      className="w-full bg-white border-2 border-[#DFE1E6] rounded-[3px] py-2 px-3 text-sm font-bold outline-none focus:border-[#4C9AFF]"
+                      placeholder="e.g. 10"
+                      value={newProject.contingencyPercent || ''}
+                      onChange={e => setNewProject({ ...newProject, contingencyPercent: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-[#5E6C84]">Default Hourly Rate (₹ / hr)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full bg-white border-2 border-[#DFE1E6] rounded-[3px] py-2 px-3 text-sm font-bold outline-none focus:border-[#4C9AFF]"
+                      placeholder="e.g. 500"
+                      value={newProject.defaultHourlyRate || ''}
+                      onChange={e => setNewProject({ ...newProject, defaultHourlyRate: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-[#5E6C84]">Budget Allocation Model</label>
+                    <select
+                      className="w-full bg-white border-2 border-[#DFE1E6] rounded-[3px] py-2 px-3 text-sm font-bold outline-none focus:border-[#4C9AFF]"
+                      value={newProject.budgetAllocationMethod}
+                      onChange={e => setNewProject({ ...newProject, budgetAllocationMethod: e.target.value })}
+                    >
+                      <option value="STORY_POINT_WEIGHTED">Story Point Weighted (Agile)</option>
+                      <option value="CATEGORY_BASED">Category Based</option>
+                      <option value="TIME_BASED">Time Based Actual/Estimate</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
           )}

@@ -720,79 +720,27 @@ public class AuthController {
             }
             com.flowtrack.model.Project project = projectOpt.get();
 
-            if (currentUser.getRole() == com.flowtrack.model.Role.USER) {
-                boolean isMember = (project.getCreatedBy() != null && project.getCreatedBy().getId().equals(currentUser.getId())) ||
-                                   project.getTeamMembers().stream().anyMatch(m -> m.getId().equals(currentUser.getId()));
-                if (!isMember) {
-                    return ResponseEntity.ok(java.util.Collections.emptyList());
-                }
-                java.util.Set<User> projectUsers = new java.util.HashSet<>();
-                projectUsers.add(currentUser);
+            java.util.Set<User> projectUsers = new java.util.HashSet<>();
+            if (project.getTeamMembers() != null) {
                 projectUsers.addAll(project.getTeamMembers());
-                if (project.getCreatedBy() != null) {
-                    projectUsers.add(project.getCreatedBy());
-                }
+            }
+            if (project.getCreatedBy() != null) {
+                projectUsers.add(project.getCreatedBy());
+            }
 
-                // Also include all users in the same tenant (synced from Workspace)
-                if (currentUser.getTenant() != null) {
-                    java.util.List<User> tenantMates = userRepository.findByTenant_Id(currentUser.getTenant().getId());
-                    projectUsers.addAll(tenantMates);
-                }
-
-                return ResponseEntity.ok(projectUsers);
-            } else if (currentUser.getRole() == com.flowtrack.model.Role.MANAGER) {
-                java.util.Set<Long> hierarchyIds = new java.util.HashSet<>();
-                hierarchyIds.add(currentUser.getId());
-                java.util.List<User> allDbUsers = userRepository.findAll();
-                buildHierarchyRecursive(currentUser.getId(), allDbUsers, hierarchyIds);
-
-                boolean hasAccess = (project.getCreatedBy() != null && project.getCreatedBy().getId().equals(currentUser.getId())) ||
-                                     project.getTeamMembers().stream().anyMatch(m -> m.getId().equals(currentUser.getId())) ||
-                                     (project.getCreatedBy() != null && hierarchyIds.contains(project.getCreatedBy().getId())) ||
-                                     project.getTeamMembers().stream().anyMatch(m -> hierarchyIds.contains(m.getId()));
-
-                if (!hasAccess) {
-                    return ResponseEntity.ok(java.util.Collections.emptyList());
-                }
-
-                java.util.Set<User> projectUsers = new java.util.HashSet<>();
-                projectUsers.addAll(project.getTeamMembers());
-                if (project.getCreatedBy() != null) {
-                    projectUsers.add(project.getCreatedBy());
-                }
-
-                // Also include all users in the same tenant (synced from Workspace)
-                if (currentUser.getTenant() != null) {
-                    java.util.List<User> tenantMates = userRepository.findByTenant_Id(currentUser.getTenant().getId());
-                    projectUsers.addAll(tenantMates);
-                }
-
-                // Also include hierarchy users
-                for (User u : allDbUsers) {
-                    if (hierarchyIds.contains(u.getId())) {
-                        projectUsers.add(u);
+            // Also include assignees who have tasks in this project
+            try {
+                java.util.List<com.flowtrack.model.Task> projectTasks = taskRepository.findByProjectIdOrderByOrderIndexAsc(projectId);
+                for (com.flowtrack.model.Task t : projectTasks) {
+                    if (t.getAssignee() != null) {
+                        projectUsers.add(t.getAssignee());
                     }
                 }
-
-                return ResponseEntity.ok(projectUsers);
-            } else {
-                // ADMIN role
-                java.util.Set<User> projectUsers = new java.util.HashSet<>();
-                projectUsers.addAll(project.getTeamMembers());
-                if (project.getCreatedBy() != null) {
-                    projectUsers.add(project.getCreatedBy());
-                }
-
-                // Also include all users in the same tenant (synced from Workspace)
-                if (currentUser.getTenant() != null) {
-                    java.util.List<User> tenantMates = userRepository.findByTenant_Id(currentUser.getTenant().getId());
-                    projectUsers.addAll(tenantMates);
-                } else {
-                    projectUsers.addAll(userRepository.findAll());
-                }
-
-                return ResponseEntity.ok(projectUsers);
+            } catch (Exception e) {
+                // Ignore task query exception
             }
+
+            return ResponseEntity.ok(projectUsers);
         }
 
         if (currentUser.getRole() == com.flowtrack.model.Role.USER) {

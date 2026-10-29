@@ -1,6 +1,7 @@
 package com.flowtrack.dto;
 
 import com.flowtrack.model.User;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -14,6 +15,10 @@ public class ProjectRequest {
     private String category;
     private Set<User> teamMembers;
     private Long leadId;
+    private BigDecimal totalBudget;
+    private BigDecimal contingencyPercent;
+    private BigDecimal defaultHourlyRate;
+    private String budgetAllocationMethod;
 
     public Long getLeadId() {
         return leadId;
@@ -85,5 +90,37 @@ public class ProjectRequest {
 
     public void setTeamMembers(Set<User> teamMembers) {
         this.teamMembers = teamMembers;
+    }
+
+    public BigDecimal getTotalBudget() {
+        return totalBudget;
+    }
+
+    public void setTotalBudget(BigDecimal totalBudget) {
+        this.totalBudget = totalBudget;
+    }
+
+    public BigDecimal getContingencyPercent() {
+        return contingencyPercent;
+    }
+
+    public void setContingencyPercent(BigDecimal contingencyPercent) {
+        this.contingencyPercent = contingencyPercent;
+    }
+
+    public BigDecimal getDefaultHourlyRate() {
+        return defaultHourlyRate;
+    }
+
+    public void setDefaultHourlyRate(BigDecimal defaultHourlyRate) {
+        this.defaultHourlyRate = defaultHourlyRate;
+    }
+
+    public String getBudgetAllocationMethod() {
+        return budgetAllocationMethod;
+    }
+
+    public void setBudgetAllocationMethod(String budgetAllocationMethod) {
+        this.budgetAllocationMethod = budgetAllocationMethod;
     }
 }

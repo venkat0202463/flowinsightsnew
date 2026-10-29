@@ -57,6 +57,8 @@ const SprintBoard = () => {
 
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
+  const [isEditingDatesOpen, setIsEditingDatesOpen] = useState(false);
+  const [editSprintDates, setEditSprintDates] = useState({ startDate: '', endDate: '' });
 
 
   const [editingColumnId, setEditingColumnId] = useState<number | null>(null);
@@ -383,6 +385,22 @@ const SprintBoard = () => {
 
 
 
+  const handleSaveSprintDates = async () => {
+    if (!activeSprint) return;
+    try {
+      await api.put(`/projects/${projectId}/sprints/${activeSprint.id}`, {
+        ...activeSprint,
+        startDate: editSprintDates.startDate || null,
+        endDate: editSprintDates.endDate || null
+      });
+      addNotification('Success', 'Sprint dates updated successfully', 'success');
+      setIsEditingDatesOpen(false);
+      fetchData();
+    } catch (err) {
+      addNotification('Error', 'Failed to update sprint dates', 'error');
+    }
+  };
+
   const completeSprint = async () => {
     if (!activeSprint) return;
     try {
@@ -587,9 +605,21 @@ const SprintBoard = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1 bg-[#F4F5F7] rounded-full text-[11px] font-bold text-[#42526E] border border-[#DFE1E6]">
-            <Clock size={14} /> {activeSprint.startDate} - {activeSprint.endDate || 'Ongoing'}
-          </div>
+          <button
+            onClick={() => {
+              setEditSprintDates({
+                startDate: activeSprint.startDate || '',
+                endDate: activeSprint.endDate || ''
+              });
+              setIsEditingDatesOpen(true);
+            }}
+            className="flex items-center gap-2 px-3 py-1 bg-[#F4F5F7] hover:bg-[#EBECF0] rounded-full text-[11px] font-bold text-[#42526E] border border-[#DFE1E6] cursor-pointer transition-colors group"
+            title="Click to edit sprint dates"
+          >
+            <Clock size={14} className="text-[#1F6FEB]" />
+            <span>{activeSprint.startDate} - {activeSprint.endDate || 'Ongoing'}</span>
+            <Edit2 size={11} className="text-[#6B778C] group-hover:text-[#1F6FEB] ml-1" />
+          </button>
           {(() => {
             const total = tasks.length || 1;
             const done = tasks.filter(t => {
@@ -1114,6 +1144,66 @@ const SprintBoard = () => {
             </div>
             <div className="px-6 py-4 bg-[#F4F5F7]/50 border-t border-[#DFE1E6] flex justify-end">
               <button onClick={() => setIsBoardSettingsOpen(false)} className="bg-[#1F6FEB] text-white px-6 py-2 rounded text-sm font-bold hover:bg-[#003484] shadow-md shadow-blue-500/20 transition-all">Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT SPRINT DATES MODAL */}
+      {isEditingDatesOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/40 backdrop-blur-xs"
+          onClick={() => setIsEditingDatesOpen(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-[400px] p-6 border border-[#DFE1E6]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[#EBECF0] mb-4">
+              <h3 className="text-base font-bold text-[#172B4D] flex items-center gap-2">
+                <Clock size={16} className="text-[#1F6FEB]" />
+                Edit Sprint Dates ({activeSprint.name})
+              </h3>
+              <button
+                onClick={() => setIsEditingDatesOpen(false)}
+                className="text-[#6B778C] hover:text-[#172B4D] p-1 rounded hover:bg-[#F4F5F7]"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#5E6C84] mb-1">Start Date</label>
+                <input
+                  type="date"
+                  value={editSprintDates.startDate}
+                  onChange={e => setEditSprintDates({ ...editSprintDates, startDate: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-[#DFE1E6] rounded-lg focus:outline-none focus:border-[#1F6FEB] text-[#172B4D]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#5E6C84] mb-1">End Date</label>
+                <input
+                  type="date"
+                  value={editSprintDates.endDate}
+                  onChange={e => setEditSprintDates({ ...editSprintDates, endDate: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-[#DFE1E6] rounded-lg focus:outline-none focus:border-[#1F6FEB] text-[#172B4D]"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2.5 mt-6 pt-3 border-t border-[#EBECF0]">
+              <button
+                onClick={() => setIsEditingDatesOpen(false)}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#5E6C84] hover:bg-[#F4F5F7]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveSprintDates}
+                className="px-4 py-1.5 rounded-lg text-xs font-bold bg-[#1F6FEB] hover:bg-[#0052CC] text-white shadow-xs"
+              >
+                Save Dates
+              </button>
             </div>
           </div>
         </div>

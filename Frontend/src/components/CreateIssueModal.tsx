@@ -242,7 +242,8 @@ const CreateIssueModal = ({ projectId, isOpen, onClose, onSuccess, initialSprint
     epicColor: '#6554C0',
     epicType: 'Standard',
     startDate: '',
-    originalEstimate: ''
+    originalEstimate: '',
+    category: 'Core Features'
   });
 
   const currentProject = projects.find(p => p.id === Number(activeProjectId));
@@ -304,7 +305,8 @@ const CreateIssueModal = ({ projectId, isOpen, onClose, onSuccess, initialSprint
         epicColor: '#6554C0',
         epicType: 'Standard',
         startDate: '',
-        originalEstimate: ''
+        originalEstimate: '',
+        category: 'Core Features'
       });
 
       if (editorRef.current) {
@@ -429,6 +431,7 @@ const CreateIssueModal = ({ projectId, isOpen, onClose, onSuccess, initialSprint
           description: formData.description,
           issueType: formData.issueType,
           priority: formData.priority,
+          category: formData.category || 'Core Features',
           storyPoints: (formData.storyPoints as any) === '' || formData.storyPoints === undefined || formData.storyPoints === null ? 0 : Number(formData.storyPoints),
           tags: formData.labels.split(',').map(s => s.trim()).filter(s => s),
           attachments: formData.attachments,
@@ -474,7 +477,8 @@ const CreateIssueModal = ({ projectId, isOpen, onClose, onSuccess, initialSprint
         epicColor: '#6554C0',
         epicType: 'Standard',
         startDate: '',
-        originalEstimate: ''
+        originalEstimate: '',
+        category: 'Core Features'
       });
       if (editorRef.current) editorRef.current.innerHTML = '';
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -1257,6 +1261,21 @@ const CreateIssueModal = ({ projectId, isOpen, onClose, onSuccess, initialSprint
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[12px] font-bold text-[#44546F]">Category</label>
+              <select
+                className="w-full p-2 border-2 border-[#DFE1E6] hover:bg-[#F4F5F7] focus:bg-white focus:border-[#4C9AFF] rounded-[3px] text-sm text-[#172B4D] outline-none transition-all h-10 font-medium"
+                value={formData.category}
+                onChange={e => setFormData({ ...formData, category: e.target.value })}
+              >
+                <option value="Core Features">Core Features</option>
+                <option value="Technical Infrastructure">Technical Infrastructure</option>
+                <option value="Bug/Maintenance">Bug/Maintenance</option>
+                <option value="Documentation">Documentation</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
 
             <div className="space-y-1">

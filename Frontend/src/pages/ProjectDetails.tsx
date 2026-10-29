@@ -7,10 +7,12 @@ import {
    ListTodo,
    Map,
    BarChart3,
-   GitPullRequest
+   GitPullRequest,
+   Wallet
 } from 'lucide-react';
 import api from '../services/api';
 import type { Project } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 const formatProjectName = (name: string) => {
    if (!name) return '';
@@ -49,6 +51,8 @@ const formatRelativeTime = (dateString: string | undefined) => {
 
 const ProjectDetails = () => {
    const { id } = useParams<{ id: string }>();
+   const { user: authUser } = useAuth();
+   const isManagerOrAdmin = authUser?.role === 'MANAGER' || authUser?.role === 'ADMIN';
    const [project, setProject] = useState<Project | null>(null);
    const [stats, setStats] = useState<any>(null);
    const [loading, setLoading] = useState(true);
@@ -124,20 +128,25 @@ const ProjectDetails = () => {
 
                <div className="flex items-center gap-3">
                   {isScrum ? (
-                     <Link to={`/dashboard/backlog/${project.id}`} className="atlassian-btn-custom px-4 py-2 rounded-[3px] text-sm font-bold flex items-center gap-2 shadow-sm">
+                     <Link to={`/dashboard/backlog/${project.id}`} className="atlassian-btn-custom px-4 py-2 rounded-[8px] text-sm font-bold flex items-center gap-2 shadow-sm">
                         <ListTodo size={16} /> <span>Backlog</span>
                      </Link>
                   ) : (
-                     <Link to={`/dashboard/roadmap/${project.id}`} className="atlassian-btn-custom px-4 py-2 rounded-[3px] text-sm font-bold flex items-center gap-2 shadow-sm">
+                     <Link to={`/dashboard/roadmap/${project.id}`} className="atlassian-btn-custom px-4 py-2 rounded-[8px] text-sm font-bold flex items-center gap-2 shadow-sm">
                         <Map size={16} /> <span>Roadmap</span>
                      </Link>
                   )}
-                  <Link to={`/dashboard/insights/${project.id}`} className="atlassian-btn-custom px-4 py-2 rounded-[3px] text-sm font-bold flex items-center gap-2 shadow-sm">
+                  <Link to={`/dashboard/insights/${project.id}`} className="atlassian-btn-custom px-4 py-2 rounded-[8px] text-sm font-bold flex items-center gap-2 shadow-sm">
                      <BarChart3 size={16} /> <span>Reports</span>
                   </Link>
+                  {isManagerOrAdmin && (
+                     <Link to={`/dashboard/financials/${project.id}`} className="atlassian-btn-custom px-4 py-2 rounded-[8px] text-sm font-bold flex items-center gap-2 shadow-sm">
+                        <Wallet size={16} /> <span>Financials</span>
+                     </Link>
+                  )}
                   <Link
                      to={isScrum ? `/dashboard/sprint-board/${project.id}` : `/dashboard/project/${project.id}`}
-                     className="atlassian-btn-custom px-4 py-2 rounded-[3px] text-sm font-bold flex items-center gap-2 shadow-sm"
+                     className="atlassian-btn-custom px-4 py-2 rounded-[8px] text-sm font-bold flex items-center gap-2 shadow-sm"
                   >
                      <Monitor size={16} /> <span>Open Board</span>
                   </Link>
@@ -146,24 +155,32 @@ const ProjectDetails = () => {
          </div>
 
          {/* PROJECT NAVIGATION */}
-         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-            <Link to={isScrum ? `/dashboard/sprint-board/${project.id}` : `/dashboard/project/${project.id}`} className="bg-white border border-[#DFE1E6] p-4 rounded-lg hover:shadow-md hover:border-[#1F6FEB] transition-all group">
+         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-8">
+            <Link to={isScrum ? `/dashboard/sprint-board/${project.id}` : `/dashboard/project/${project.id}`} className="bg-white border border-[#DFE1E6] p-4 rounded-[8px] hover:shadow-md hover:border-[#1F6FEB] transition-all group">
                <Layout size={20} className="text-[#00B3A4] mb-3 group-hover:scale-110 transition-transform" />
                <h4 className="text-sm font-bold text-[#172B4D] mb-1">Board</h4>
                <p className="text-[10px] text-[#5E6C84] uppercase">Open active board</p>
             </Link>
 
             {isScrum ? (
-               <Link to={`/dashboard/backlog/${project.id}`} className="bg-white border border-[#DFE1E6] p-4 rounded-lg hover:shadow-md hover:border-[#1F6FEB] transition-all group">
+               <Link to={`/dashboard/backlog/${project.id}`} className="bg-white border border-[#DFE1E6] p-4 rounded-[8px] hover:shadow-md hover:border-[#1F6FEB] transition-all group">
                   <ListTodo size={20} className="text-[#00B3A4] mb-3 group-hover:scale-110 transition-transform" />
                   <h4 className="text-sm font-bold text-[#172B4D] mb-1">Backlog</h4>
                   <p className="text-[10px] text-[#5E6C84] uppercase">Manage sprint tasks</p>
                </Link>
             ) : (
-               <Link to={`/dashboard/roadmap/${project.id}`} className="bg-white border border-[#DFE1E6] p-4 rounded-lg hover:shadow-md hover:border-[#1F6FEB] transition-all group">
+               <Link to={`/dashboard/roadmap/${project.id}`} className="bg-white border border-[#DFE1E6] p-4 rounded-[8px] hover:shadow-md hover:border-[#1F6FEB] transition-all group">
                   <Map size={20} className="text-[#00B3A4] mb-3 group-hover:scale-110 transition-transform" />
                   <h4 className="text-sm font-bold text-[#172B4D] mb-1">Roadmap</h4>
                   <p className="text-[10px] text-[#5E6C84] uppercase">View milestones</p>
+               </Link>
+            )}
+
+            {isManagerOrAdmin && (
+               <Link to={`/dashboard/financials/${project.id}`} className="bg-white border border-[#DFE1E6] p-4 rounded-[8px] hover:shadow-md hover:border-[#1F6FEB] transition-all group">
+                  <Wallet size={20} className="text-[#0052CC] mb-3 group-hover:scale-110 transition-transform" />
+                  <h4 className="text-sm font-bold text-[#172B4D] mb-1">Budget & Costs</h4>
+                  <p className="text-[10px] text-[#5E6C84] uppercase">Financials</p>
                </Link>
             )}
 
@@ -183,20 +200,11 @@ const ProjectDetails = () => {
                </Link>
             )}
 
-
-            {isScrum ? (
-               <Link to={`/dashboard/insights/${project.id}?tab=Burndown`} className="bg-white border border-[#DFE1E6] p-4 rounded-lg hover:shadow-md hover:border-[#1F6FEB] transition-all group">
-                  <BarChart3 size={20} className="text-[#00B3A4] mb-3 group-hover:scale-110 transition-transform" />
-                  <h4 className="text-sm font-bold text-[#172B4D] mb-1">Reports</h4>
-                  <p className="text-[10px] text-[#5E6C84] uppercase">Sprint analytics</p>
-               </Link>
-            ) : (
-               <Link to={`/dashboard/insights/${project.id}?tab=Burndown`} className="bg-white border border-[#DFE1E6] p-4 rounded-lg hover:shadow-md hover:border-[#1F6FEB] transition-all group">
-                  <BarChart3 size={20} className="text-[#00B3A4] mb-3 group-hover:scale-110 transition-transform" />
-                  <h4 className="text-sm font-bold text-[#172B4D] mb-1">Reports</h4>
-                  <p className="text-[10px] text-[#5E6C84] uppercase">Kanban analytics</p>
-               </Link>
-            )}
+            <Link to={`/dashboard/insights/${project.id}?tab=Burndown`} className="bg-white border border-[#DFE1E6] p-4 rounded-lg hover:shadow-md hover:border-[#1F6FEB] transition-all group">
+               <BarChart3 size={20} className="text-[#00B3A4] mb-3 group-hover:scale-110 transition-transform" />
+               <h4 className="text-sm font-bold text-[#172B4D] mb-1">Reports</h4>
+               <p className="text-[10px] text-[#5E6C84] uppercase">Insights & Health</p>
+            </Link>
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
@@ -211,17 +219,27 @@ const ProjectDetails = () => {
 
                {/* COMPACT METADATA */}
                <div className="bg-white p-6 rounded-lg border border-[#DFE1E6] shadow-sm">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                      <div>
-                        <p className="text-[15px] font-bold text-[#5E6C84] mb-1">Category</p>
+                        <p className="text-[13px] font-bold text-[#5E6C84] mb-1">Category</p>
                         <p className="text-[13px] font-bold text-[#172B4D]">{project.category || 'Software'}</p>
                      </div>
                      <div>
-                        <p className="text-[15px] font-bold text-[#5E6C84] mb-1">Deadline</p>
-                        <p className="text-[13px] font-bold text-[#172B4D]">{project.deadline ? new Date(project.deadline).toLocaleDateString() : '30/4/2026'}</p>
+                        <p className="text-[13px] font-bold text-[#5E6C84] mb-1">Total Budget</p>
+                        <p className="text-[13px] font-bold text-[#0052CC]">
+                           {project.totalBudget !== undefined && project.totalBudget !== null
+                              ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(project.totalBudget)
+                              : 'Not configured'}
+                        </p>
                      </div>
                      <div>
-                        <p className="text-[15px] font-bold text-[#5E6C84] mb-1">Team Size</p>
+                        <p className="text-[13px] font-bold text-[#5E6C84] mb-1">Hourly Rate</p>
+                        <p className="text-[13px] font-bold text-[#172B4D]">
+                           {project.defaultHourlyRate ? `₹${project.defaultHourlyRate}/hr` : '₹0/hr'}
+                        </p>
+                     </div>
+                     <div>
+                        <p className="text-[13px] font-bold text-[#5E6C84] mb-1">Team Size</p>
                         <p className="text-[13px] font-bold text-[#172B4D]">{project.teamSize || stats?.memberCount || 2} Members</p>
                      </div>
                   </div>

@@ -355,7 +355,14 @@ const Backlog = () => {
         <div className="flex items-center justify-between px-4 py-4 bg-[#F4F5F7]/50 border-b border-[#DFE1E6] rounded-t-md">
           <div className="flex items-center gap-4">
             <ChevronDown size={20} className="text-[#42526E]" />
-            <h3 className="text-[14px] font-semibold text-[#172B4D]">{sprint.name}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-[14px] font-semibold text-[#172B4D]">{sprint.name}</h3>
+              {sprint.status?.toUpperCase() === 'ACTIVE' && (
+                <span className="text-[9.5px] font-bold text-[#1F6FEB] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+                  ACTIVE SPRINT
+                </span>
+              )}
+            </div>
             <button
               onClick={(e) => { e.stopPropagation(); setIsTeamModalOpen(true); }}
               className="flex -space-x-2 hover:opacity-80 transition-opacity p-1 rounded-lg hover:bg-gray-100 group"
@@ -410,9 +417,18 @@ const Backlog = () => {
                 </div>
               </div>
             )}
-            <button onClick={() => startCycle(sprint.id, (sprint.name || '').toLowerCase().includes('kanban'))} className="bg-[#1F6FEB] text-white text-[11px] font-black h-7 px-4 rounded hover:bg-[#003484] shadow-md shadow-blue-500/10">
-              {(sprint.name || '').toLowerCase().includes('kanban') ? 'Start kanban' : 'Start sprint'}
-            </button>
+            {sprint.status?.toUpperCase() === 'ACTIVE' ? (
+              <button
+                onClick={() => navigate(`/dashboard/sprint-board/${projectId}`)}
+                className="bg-emerald-600 text-white text-[11px] font-black h-7 px-4 rounded hover:bg-emerald-700 shadow-md shadow-emerald-500/10"
+              >
+                View board
+              </button>
+            ) : (
+              <button onClick={() => startCycle(sprint.id, (sprint.name || '').toLowerCase().includes('kanban'))} className="bg-[#1F6FEB] text-white text-[11px] font-black h-7 px-4 rounded hover:bg-[#003484] shadow-md shadow-blue-500/10">
+                {(sprint.name || '').toLowerCase().includes('kanban') ? 'Start kanban' : 'Start sprint'}
+              </button>
+            )}
             <div className="relative">
               <button
                 onClick={(e) => { e.stopPropagation(); setOpenSprintMenuId(openSprintMenuId === sprint.id ? null : sprint.id); }}
@@ -518,7 +534,7 @@ const Backlog = () => {
         </div>
 
 
-        {sprints.filter(s => s.status?.toUpperCase() !== 'ACTIVE' && s.status?.toUpperCase() !== 'COMPLETED').map(renderSprintCluster)}
+        {sprints.filter(s => s.status?.toUpperCase() !== 'COMPLETED').map(renderSprintCluster)}
 
         {/* Backlog Reservoir */}
         <div

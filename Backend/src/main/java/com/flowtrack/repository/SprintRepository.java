@@ -8,7 +8,9 @@ import java.util.List;
 @Repository
 public interface SprintRepository extends JpaRepository<Sprint, Long> {
     List<Sprint> findByProjectId(Long projectId);
+    List<Sprint> findByProjectIdOrderByStartDateAsc(Long projectId);
     List<Sprint> findByProjectIdIn(List<Long> projectIds);
     List<Sprint> findByProjectIdAndStatus(Long projectId, String status);
+    List<Sprint> findByProjectIdAndStatusOrderByStartDateAsc(Long projectId, String status);
     List<Sprint> findByStatusAndEndDateBefore(String status, java.time.LocalDate date);
 }

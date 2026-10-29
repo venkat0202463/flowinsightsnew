@@ -15,6 +15,9 @@
     --ds-primary: #0052CC;
     --header-height: 4rem;
     --sidebar-width: 260px;
+    --bs-body-font-family: 'Wix Madefor Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    --bs-font-sans-serif: 'Wix Madefor Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    --bs-body-font-weight: 600 !important;
   }
 
   [data-theme='dark'] {
@@ -27,14 +30,46 @@
     --ds-primary: #4C9AFF;
   }
 
-  * {
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
+    font-family: 'Wix Madefor Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    font-style: normal;
+  }
+
+  html,
+  body,
+  #root,
+  button,
+  input,
+  select,
+  textarea,
+  p,
+  span,
+  div,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  table,
+  th,
+  td {
+    font-family: 'Wix Madefor Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    line-height: normal;
+    letter-spacing: normal;
+    font-style: normal;
   }
 
   body {
     background-color: var(--ds-background);
     color: var(--ds-text);
-    font-family: 'Wix Madefor Display', sans-serif;
+    font-family: 'Wix Madefor Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     font-size: 15px;
     font-weight: 600;
     line-height: normal;
@@ -198,12 +233,21 @@
 }
 
 @media print {
+  /* Enforce exact colors, background fills, and SVGs in PDF exports */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
 
-  /* Hide interactive elements, headers, and sidebars */
+  /* Hide interactive elements, headers, buttons, and sidebars */
   .top-navigation,
   .sidebar-node,
   .no-print,
   button,
+  select,
   .nav-dropdown-container {
     display: none !important;
   }
@@ -222,6 +266,7 @@
     overflow: visible !important;
     position: static !important;
     display: block !important;
+    background: #FFFFFF !important;
   }
 
   .main-viewport {
@@ -233,10 +278,52 @@
     display: block !important;
   }
 
-  /* Ensure pages/components nested inside are not clipped */
-  .h-full {
-    height: auto !important;
-    overflow: visible !important;
+  /* Ensure SVG vector elements retain colors in print preview */
+  svg rect,
+  svg path,
+  svg circle,
+  svg line {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent individual cards, charts, and table rows from splitting awkwardly */
+  .card,
+  svg,
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Allow containers, grids, and tables to flow smoothly across pages without giant gaps */
+  .grid,
+  table,
+  .space-y-6,
+  .space-y-8,
+  .space-y-10,
+  .space-y-12,
+  .print-section {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  /* Force clean page breaks at major section boundaries */
+  .print-page-break {
+    break-before: page !important;
+    page-break-before: always !important;
+    padding-top: 12px !important;
+  }
+
+  /* Optimized KPI grid for PDF layout */
+  .print-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .print-kpi-card {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
   }
 }
 
@@ -325,16 +412,31 @@ h1 {
    SIDEBAR ACTIVE MENU ITEM
 ========================================= */
 
+.sidebar-node p,
+.sidebar-node h1,
+.sidebar-node h2,
+.sidebar-node h3 {
+  color: #000000 !important;
+}
+
 /* Default Item */
 .sidebar-item,
 .nav-item,
 .menu-item {
   background: transparent !important;
-  color: #1F2937 !important;
+  color: #000000 !important;
   border-radius: 8px !important;
   /* Rounded edges */
   transition: all 0.2s ease-in-out;
   padding: 10px 14px;
+}
+
+/* Hover Item */
+.sidebar-item:not(.active):hover,
+.nav-item:not(.active):hover,
+.menu-item:not(.active):hover {
+  background-color: #EBECF0 !important;
+  color: #000000 !important;
 }
 
 /* Active / Selected */
@@ -360,7 +462,13 @@ h1 {
 .sidebar-item:not(.active) svg,
 .nav-item:not(.active) svg,
 .menu-item:not(.active) svg {
-  color: #42526E !important;
+  color: #000000 !important;
+}
+
+.sidebar-item:not(.active):hover svg,
+.nav-item:not(.active):hover svg,
+.menu-item:not(.active):hover svg {
+  color: #000000 !important;
 }
 
 /* =========================================

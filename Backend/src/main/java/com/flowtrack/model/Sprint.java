@@ -27,6 +27,12 @@ public class Sprint {
     @Column(name = "type")
     private String type = "SPRINT"; // KANBAN, SPRINT
 
+    @Column(name = "initial_commitment_points")
+    private Integer initialCommitmentPoints;
+
+    @Column(name = "activated_at")
+    private java.time.LocalDateTime activatedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
@@ -51,6 +57,12 @@ public class Sprint {
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
+
+    public Integer getInitialCommitmentPoints() { return initialCommitmentPoints; }
+    public void setInitialCommitmentPoints(Integer initialCommitmentPoints) { this.initialCommitmentPoints = initialCommitmentPoints; }
+
+    public java.time.LocalDateTime getActivatedAt() { return activatedAt; }
+    public void setActivatedAt(java.time.LocalDateTime activatedAt) { this.activatedAt = activatedAt; }
 
     public Project getProject() { return project; }
     public void setProject(Project project) { this.project = project; }

@@ -18,7 +18,11 @@ import {
    ChevronLeft,
    ChevronRight,
    Compass,
-   Loader2
+   Loader2,
+   Wallet,
+   Briefcase,
+   ClipboardCheck,
+   ListTodo
 } from 'lucide-react';
 import { Link, useLocation, Outlet, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -31,6 +35,7 @@ import { useNotifications } from '../context/NotificationContext';
 import Toast from '../components/Toast';
 import { getTaskCode } from '../services/projectUtils';
 import scalozFlowLogo from '../assets/scaloz-flow-logo.png';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 
 const DashboardLayout: React.FC = () => {
@@ -747,7 +752,7 @@ const DashboardLayout: React.FC = () => {
                   <div className="space-y-6">
                      {/* Workspace Section */}
                      <div className="mb-4">
-                        <p className="text-[15px] font-bold text-[#1F2937] mb-2 px-3">Workspace</p>
+                        <p className="text-[15px] font-bold text-black mb-2 px-3">Workspace</p>
                         <div className="space-y-1">
                            <Link
                               to="/dashboard"
@@ -759,7 +764,7 @@ const DashboardLayout: React.FC = () => {
                               to="/dashboard/projects"
                               className={`sidebar-item flex items-center gap-3 text-[15px] ${location.pathname === '/dashboard/projects' ? 'active' : ''}`}
                            >
-                              <Layers size={18} /> Project Portfolio
+                              <Briefcase size={18} /> Project Portfolio
                            </Link>
                            <Link
                               to="/dashboard/plans"
@@ -771,15 +776,23 @@ const DashboardLayout: React.FC = () => {
                               to="/dashboard/my-submitted-tasks"
                               className={`sidebar-item flex items-center gap-3 text-[15px] ${location.pathname === '/dashboard/my-submitted-tasks' ? 'active' : ''}`}
                            >
-                              <Layers size={18} /> My Submitted Tasks
+                              <ClipboardCheck size={18} /> My Submitted Tasks
                            </Link>
+                           {(authUser?.role === 'MANAGER' || authUser?.role === 'ADMIN') && (
+                              <Link
+                                 to="/dashboard/financials"
+                                 className={`sidebar-item flex items-center gap-3 text-[15px] ${location.pathname === '/dashboard/financials' ? 'active' : ''}`}
+                              >
+                                 <Wallet size={18} /> Financials
+                              </Link>
+                           )}
                         </div>
                      </div>
 
                      {/* Project Section */}
                      {currentProjectId && (
                         <div className="mb-4 animate-in slide-in-from-top-2 duration-300">
-                           <p className="text-[15px] font-bold text-[#1F2937] mb-2 px-3">
+                           <p className="text-[15px] font-bold text-black mb-2 px-3">
                               Project
                            </p>
                            <div className="space-y-1">
@@ -805,7 +818,7 @@ const DashboardLayout: React.FC = () => {
                                        to={`/dashboard/backlog/${currentProjectId}`}
                                        className={`sidebar-item flex items-center gap-3 text-[15px] ${location.pathname.startsWith('/dashboard/backlog/') ? 'active' : ''}`}
                                     >
-                                       <Layers size={18} /> Backlog
+                                       <ListTodo size={18} /> Backlog
                                     </Link>
                                     <Link
                                        to={`/dashboard/sprint-board/${currentProjectId}`}
@@ -828,6 +841,15 @@ const DashboardLayout: React.FC = () => {
                               >
                                  <BarChart2 size={18} /> Insights
                               </Link>
+
+                              {(authUser?.role === 'MANAGER' || authUser?.role === 'ADMIN') && (
+                                 <Link
+                                    to={`/dashboard/financials/${currentProjectId}`}
+                                    className={`sidebar-item flex items-center gap-3 text-[15px] ${location.pathname.startsWith('/dashboard/financials/') ? 'active' : ''}`}
+                                 >
+                                    <Wallet size={18} /> Budget & Financials
+                                 </Link>
+                              )}
                            </div>
                         </div>
                      )}
@@ -835,7 +857,7 @@ const DashboardLayout: React.FC = () => {
                      {/* Administration Section */}
                      {(authUser?.role === 'MANAGER' || authUser?.role === 'ADMIN') && (
                         <div className="mb-4">
-                           <p className="text-[15px] font-bold text-[#1F2937] mb-2 px-3">Administration</p>
+                           <p className="text-[15px] font-bold text-black mb-2 px-3">Administration</p>
                            <div className="space-y-1">
                               <Link
                                  to="/dashboard/pm-review-queue"
@@ -858,7 +880,9 @@ const DashboardLayout: React.FC = () => {
 
             {/* Main Content Viewport */}
             <main className="main-viewport flex-1 overflow-y-auto custom-scrollbar" style={{ backgroundColor: 'var(--ds-background)' }}>
-               <Outlet />
+               <ErrorBoundary fallbackTitle="Page Display Error">
+                  <Outlet />
+               </ErrorBoundary>
             </main>
          </div>
 

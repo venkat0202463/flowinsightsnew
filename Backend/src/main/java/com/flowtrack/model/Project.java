@@ -35,6 +35,25 @@ public class Project {
     @Column(name = "category")
     private String category;
 
+    @Column(name = "total_budget", precision = 15, scale = 2)
+    private java.math.BigDecimal totalBudget = java.math.BigDecimal.ZERO;
+
+    @Column(name = "contingency_percent", precision = 5, scale = 2)
+    private java.math.BigDecimal contingencyPercent = java.math.BigDecimal.ZERO;
+
+    @Column(name = "default_hourly_rate", precision = 10, scale = 2)
+    private java.math.BigDecimal defaultHourlyRate = java.math.BigDecimal.ZERO;
+
+    @Column(name = "cost_per_story_point", precision = 12, scale = 2)
+    private java.math.BigDecimal costPerStoryPoint = java.math.BigDecimal.ZERO;
+
+    @Column(name = "budget_allocation_method", length = 50)
+    private String budgetAllocationMethod = "STORY_POINT_WEIGHTED"; // STORY_POINT_WEIGHTED, CATEGORY_BASED, TIME_BASED
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "project" })
+    private java.util.List<ProjectBudgetCategory> budgetCategories = new java.util.ArrayList<>();
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by", referencedColumnName = "emp_id", nullable = false)
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "password" })
@@ -141,6 +160,54 @@ public class Project {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public java.math.BigDecimal getTotalBudget() {
+        return totalBudget != null ? totalBudget : java.math.BigDecimal.ZERO;
+    }
+
+    public void setTotalBudget(java.math.BigDecimal totalBudget) {
+        this.totalBudget = totalBudget != null ? totalBudget : java.math.BigDecimal.ZERO;
+    }
+
+    public java.math.BigDecimal getContingencyPercent() {
+        return contingencyPercent != null ? contingencyPercent : java.math.BigDecimal.ZERO;
+    }
+
+    public void setContingencyPercent(java.math.BigDecimal contingencyPercent) {
+        this.contingencyPercent = contingencyPercent != null ? contingencyPercent : java.math.BigDecimal.ZERO;
+    }
+
+    public java.math.BigDecimal getDefaultHourlyRate() {
+        return defaultHourlyRate != null ? defaultHourlyRate : java.math.BigDecimal.ZERO;
+    }
+
+    public void setDefaultHourlyRate(java.math.BigDecimal defaultHourlyRate) {
+        this.defaultHourlyRate = defaultHourlyRate != null ? defaultHourlyRate : java.math.BigDecimal.ZERO;
+    }
+
+    public java.math.BigDecimal getCostPerStoryPoint() {
+        return costPerStoryPoint != null ? costPerStoryPoint : java.math.BigDecimal.ZERO;
+    }
+
+    public void setCostPerStoryPoint(java.math.BigDecimal costPerStoryPoint) {
+        this.costPerStoryPoint = costPerStoryPoint != null ? costPerStoryPoint : java.math.BigDecimal.ZERO;
+    }
+
+    public String getBudgetAllocationMethod() {
+        return budgetAllocationMethod != null ? budgetAllocationMethod : "STORY_POINT_WEIGHTED";
+    }
+
+    public void setBudgetAllocationMethod(String budgetAllocationMethod) {
+        this.budgetAllocationMethod = budgetAllocationMethod != null ? budgetAllocationMethod : "STORY_POINT_WEIGHTED";
+    }
+
+    public java.util.List<ProjectBudgetCategory> getBudgetCategories() {
+        return budgetCategories;
+    }
+
+    public void setBudgetCategories(java.util.List<ProjectBudgetCategory> budgetCategories) {
+        this.budgetCategories = budgetCategories;
     }
 
     public Set<User> getTeamMembers() {

@@ -1,6 +1,7 @@
 package com.flowtrack.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -67,6 +68,9 @@ public class Task {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 
     @Column
     private String priority = "MEDIUM";
@@ -147,6 +151,18 @@ public class Task {
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @com.fasterxml.jackson.annotation.JsonIgnore
     private List<WorkLog> workLogs = new ArrayList<>();
+
+    @Column(name = "allocated_budget", precision = 15, scale = 2)
+    private BigDecimal allocatedBudget = BigDecimal.ZERO;
+
+    @Column(name = "actual_cost", precision = 15, scale = 2)
+    private BigDecimal actualCost = BigDecimal.ZERO;
+
+    @Column(name = "budget_allocation_source", length = 30)
+    private String budgetAllocationSource = "AUTOMATIC";
+
+    @Column(name = "category", length = 100)
+    private String category = "Core Features";
 
     public Task() {
     }
@@ -261,6 +277,14 @@ public class Task {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
     }
 
     public String getPriority() {
@@ -502,6 +526,38 @@ public class Task {
             sb.append(minutes).append("m");
         }
         return sb.toString().trim();
+    }
+
+    public BigDecimal getAllocatedBudget() {
+        return allocatedBudget != null ? allocatedBudget : BigDecimal.ZERO;
+    }
+
+    public void setAllocatedBudget(BigDecimal allocatedBudget) {
+        this.allocatedBudget = allocatedBudget != null ? allocatedBudget : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getActualCost() {
+        return actualCost != null ? actualCost : BigDecimal.ZERO;
+    }
+
+    public void setActualCost(BigDecimal actualCost) {
+        this.actualCost = actualCost != null ? actualCost : BigDecimal.ZERO;
+    }
+
+    public String getBudgetAllocationSource() {
+        return budgetAllocationSource != null ? budgetAllocationSource : "AUTOMATIC";
+    }
+
+    public void setBudgetAllocationSource(String budgetAllocationSource) {
+        this.budgetAllocationSource = budgetAllocationSource != null ? budgetAllocationSource : "AUTOMATIC";
+    }
+
+    public String getCategory() {
+        return category != null ? category : "Core Features";
+    }
+
+    public void setCategory(String category) {
+        this.category = category != null ? category : "Core Features";
     }
 
     @PreUpdate

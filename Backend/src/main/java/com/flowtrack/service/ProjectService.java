@@ -37,6 +37,9 @@ public class ProjectService {
     @Autowired
     private TaskEmailService taskEmailService;
 
+    @Autowired
+    private BudgetCalculationService budgetCalculationService;
+
     @jakarta.annotation.PostConstruct
     public void fixDatabaseSchema() {
         try {
@@ -150,6 +153,22 @@ public class ProjectService {
             }
         }
 
+        if (savedProject.getTotalBudget() != null && savedProject.getTotalBudget().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            try {
+                budgetCalculationService.recordBudgetChangeHistory(
+                    savedProject.getId(),
+                    null, savedProject.getTotalBudget(),
+                    null, savedProject.getContingencyPercent(),
+                    null, savedProject.getBudgetAllocationMethod(),
+                    null, savedProject.getDefaultHourlyRate(),
+                    null, savedProject.getCostPerStoryPoint(),
+                    "Initial project budget setup",
+                    user != null ? user.getName() : "System",
+                    empId
+                );
+            } catch (Exception ignored) {}
+        }
+
         return savedProject;
     }
 
@@ -171,6 +190,16 @@ public class ProjectService {
         String oldProjectType = project.getProjectType();
         project.setProjectType(projectDetails.getProjectType());
         project.setCategory(projectDetails.getCategory());
+
+        java.math.BigDecimal oldBudget = project.getTotalBudget();
+        java.math.BigDecimal oldContingency = project.getContingencyPercent();
+        java.math.BigDecimal oldHourlyRate = project.getDefaultHourlyRate();
+        String oldMethod = project.getBudgetAllocationMethod();
+
+        if (projectDetails.getTotalBudget() != null) project.setTotalBudget(projectDetails.getTotalBudget());
+        if (projectDetails.getContingencyPercent() != null) project.setContingencyPercent(projectDetails.getContingencyPercent());
+        if (projectDetails.getDefaultHourlyRate() != null) project.setDefaultHourlyRate(projectDetails.getDefaultHourlyRate());
+        if (projectDetails.getBudgetAllocationMethod() != null) project.setBudgetAllocationMethod(projectDetails.getBudgetAllocationMethod());
 
         if (leadId != null) {
             userRepository.findById(leadId).ifPresent(newLead -> {
@@ -270,6 +299,39 @@ public class ProjectService {
         }
 
         Project savedProject = projectRepository.save(project);
+        try {
+            budgetCalculationService.recalculateProjectBudget(savedProject.getId(), false);
+        } catch (Exception e) {
+            // Safe fallback
+        }
+
+        try {
+            String updatedBy = null;
+            String curEmpId = null;
+            try {
+                String curEmail = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+                User u = userRepository.findByEmail(curEmail).orElse(null);
+                if (u != null) {
+                    updatedBy = u.getName();
+                    curEmpId = u.getEmpId();
+                }
+            } catch (Exception e) {
+                // Ignore context fallback
+            }
+
+            budgetCalculationService.recordBudgetChangeHistory(
+                    savedProject.getId(),
+                    oldBudget, savedProject.getTotalBudget(),
+                    oldContingency, savedProject.getContingencyPercent(),
+                    oldMethod, savedProject.getBudgetAllocationMethod(),
+                    oldHourlyRate, savedProject.getDefaultHourlyRate(),
+                    null, null,
+                    "Project settings updated",
+                    updatedBy != null ? updatedBy : "System",
+                    curEmpId
+            );
+        } catch (Exception ignored) {}
+
         activityLogService.log(
                 savedProject.getId(),
                 null,

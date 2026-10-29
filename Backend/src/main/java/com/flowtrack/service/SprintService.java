@@ -92,6 +92,11 @@ public class SprintService {
 
         if ("ACTIVE".equalsIgnoreCase(sprintDetails.getStatus())) {
             List<com.flowtrack.model.Task> tasks = taskRepository.findBySprintIdOrderByOrderIndexAsc(id);
+            if (sprint.getInitialCommitmentPoints() == null) {
+                int totalPoints = tasks.stream().mapToInt(t -> t.getStoryPoints() != null ? t.getStoryPoints() : 0).sum();
+                sprint.setInitialCommitmentPoints(totalPoints);
+                sprint.setActivatedAt(java.time.LocalDateTime.now());
+            }
             for (com.flowtrack.model.Task t : tasks) {
                 // Transition tasks from Backlog state to Active Sprint state
                 if ("BACKLOG".equalsIgnoreCase(t.getEnvironment()) 

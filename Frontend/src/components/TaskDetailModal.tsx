@@ -2244,6 +2244,26 @@ const TaskDetailModal = ({
                   onBlur={() => handleUpdate({ storyPoints: (task?.storyPoints as any) === '' || task?.storyPoints === undefined || task?.storyPoints === null ? 0 : Number(task.storyPoints) })}
                 />
               </div>
+
+              <div className="space-y-1.5 col-span-2">
+                <label className="text-[13px] font-bold text-[#172B4D]">Category</label>
+                <div className="relative">
+                  <select
+                    disabled={isUnderReview}
+                    className={`w-full p-2.5 border-2 border-[#DFE1E6] rounded-[3px] text-sm font-black text-[#172B4D] appearance-none outline-none transition-all pr-10 ${isUnderReview ? 'bg-[#FAFBFC] cursor-not-allowed opacity-80' : 'bg-white focus:border-[#4C9AFF] cursor-pointer'}`}
+                    value={task?.category || 'Core Features'}
+                    onChange={(e) => handleUpdate({ category: e.target.value })}
+                  >
+                    <option value="Core Features">Core Features</option>
+                    <option value="Technical Infrastructure">Technical Infrastructure</option>
+                    <option value="Bug/Maintenance">Bug/Maintenance</option>
+                    <option value="Contingency">Contingency</option>
+                  </select>
+                  {!isUnderReview && (
+                    <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#42526E] pointer-events-none" />
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Time Tracking Section */}

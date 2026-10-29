@@ -25,6 +25,8 @@ import Plans from './pages/Plans';
 import PmReviewQueue from './pages/PmReviewQueue';
 import MySubmittedTasks from './pages/MySubmittedTasks';
 import TaskDetailPage from './pages/TaskDetailPage';
+import FinancialAnalytics from './pages/FinancialAnalytics';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const SSORedirect = () => {
   useEffect(() => {
@@ -62,10 +64,21 @@ const SSORedirect = () => {
 };
 
 const DashboardRouteGuard = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-10 h-10 border-4 border-[#1F6FEB] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
   if (!isAuthenticated()) return <SSORedirect />;
   if (user?.passwordResetRequired) return <Navigate to="/reset-password" />;
-  return <DashboardLayout />;
+  return (
+    <ErrorBoundary fallbackTitle="Application Error">
+      <DashboardLayout />
+    </ErrorBoundary>
+  );
 };
 
 function App() {
@@ -93,6 +106,8 @@ function App() {
           <Route path="roadmap/:id" element={<TimelinePage />} />
           <Route path="insights/:id" element={<InsightsPage />} />
           <Route path="insights" element={<InsightsPage />} />
+          <Route path="financials/:id" element={<FinancialAnalytics />} />
+          <Route path="financials" element={<FinancialAnalytics />} />
           <Route path="releases/:id" element={<ReleasesPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />

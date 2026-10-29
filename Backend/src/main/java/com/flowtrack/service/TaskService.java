@@ -40,6 +40,12 @@ public class TaskService {
     @Autowired
     private TaskEmailService taskEmailService;
 
+    @Autowired
+    private BudgetCalculationService budgetCalculationService;
+
+    @Autowired
+    private SprintScopeChangeService sprintScopeChangeService;
+
     public List<Task> getAllTasks() {
         return taskRepository.findAll();
     }
@@ -291,6 +297,23 @@ public class TaskService {
             syncEpicStatus(saved.getParentTask().getId());
         }
 
+        if (saved.getProject() != null) {
+            try {
+                budgetCalculationService.recalculateProjectBudget(saved.getProject().getId(), false);
+            } catch (Exception e) {
+                // Safe fallback
+            }
+        }
+
+        if (saved.getSprint() != null && "ACTIVE".equalsIgnoreCase(saved.getSprint().getStatus())) {
+            int pts = saved.getStoryPoints() != null ? saved.getStoryPoints() : 0;
+            sprintScopeChangeService.recordScopeChange(
+                saved.getSprint().getId(), saved.getId(),
+                SprintScopeChangeService.formatTaskKey(saved), saved.getTitle(),
+                "TASK_ADDED", 0, pts, pts, "New task created in active sprint"
+            );
+        }
+
         return saved;
     }
 
@@ -320,6 +343,8 @@ public class TaskService {
         String oldIssueType = task.getIssueType();
         String oldTitle = task.getTitle();
         String oldDescription = task.getDescription();
+        Integer oldStoryPoints = task.getStoryPoints() != null ? task.getStoryPoints() : 0;
+        Sprint oldSprint = task.getSprint();
 
         // Lock and validate review-phase tasks status changes
         if (taskDetails.getStatus() != null && !taskDetails.getStatus().equalsIgnoreCase(oldStatus)) {
@@ -428,6 +453,14 @@ public class TaskService {
             task.setIssueType(taskDetails.getIssueType());
         if (taskDetails.getEpicColor() != null)
             task.setEpicColor(taskDetails.getEpicColor());
+        if (taskDetails.getCategory() != null)
+            task.setCategory(taskDetails.getCategory());
+        if (taskDetails.getAllocatedBudget() != null)
+            task.setAllocatedBudget(taskDetails.getAllocatedBudget());
+        if (taskDetails.getActualCost() != null)
+            task.setActualCost(taskDetails.getActualCost());
+        if (taskDetails.getBudgetAllocationSource() != null)
+            task.setBudgetAllocationSource(taskDetails.getBudgetAllocationSource());
 
         if (assigneeId != null) {
             User assignee = userRepository.findById(assigneeId).orElse(null);
@@ -527,6 +560,16 @@ public class TaskService {
             boolean isDone = "DONE".equalsIgnoreCase(saved.getStatus()) || "Done".equalsIgnoreCase(saved.getStatus());
             
             if (isDone && !wasDone) {
+                saved.setCompletedAt(java.time.LocalDateTime.now());
+                saved = taskRepository.save(saved);
+                if (saved.getSprint() != null && "ACTIVE".equalsIgnoreCase(saved.getSprint().getStatus())) {
+                    sprintScopeChangeService.recordScopeChange(
+                        saved.getSprint().getId(), saved.getId(),
+                        SprintScopeChangeService.formatTaskKey(saved), saved.getTitle(),
+                        "TASK_COMPLETED", oldStoryPoints, saved.getStoryPoints(),
+                        saved.getStoryPoints() != null ? saved.getStoryPoints() : 0, "Task completed"
+                    );
+                }
                 if (saved.getAssignee() != null) {
                     try { taskEmailService.sendTaskCompletedEmail(saved.getAssignee(), saved); } catch (Exception e) { e.printStackTrace(); }
                 }
@@ -541,6 +584,16 @@ public class TaskService {
                     }
                 }
             } else if (wasDone && !isDone) {
+                saved.setCompletedAt(null);
+                saved = taskRepository.save(saved);
+                if (saved.getSprint() != null && "ACTIVE".equalsIgnoreCase(saved.getSprint().getStatus())) {
+                    sprintScopeChangeService.recordScopeChange(
+                        saved.getSprint().getId(), saved.getId(),
+                        SprintScopeChangeService.formatTaskKey(saved), saved.getTitle(),
+                        "TASK_REOPENED", oldStoryPoints, saved.getStoryPoints(),
+                        saved.getStoryPoints() != null ? saved.getStoryPoints() : 0, "Task reopened"
+                    );
+                }
                 if (saved.getAssignee() != null) {
                     try { taskEmailService.sendTaskReopenedEmail(saved.getAssignee(), saved, "Task moved back to active columns."); } catch (Exception e) { e.printStackTrace(); }
                 }
@@ -618,6 +671,50 @@ public class TaskService {
             taskHistoryService.log(saved.getId(), "DESCRIPTION_CHANGE", "Previous description", "Updated description");
         }
 
+        // Story points change & Sprint scope tracking
+        Integer newStoryPoints = saved.getStoryPoints() != null ? saved.getStoryPoints() : 0;
+        if (!java.util.Objects.equals(oldStoryPoints, newStoryPoints)) {
+            taskHistoryService.log(saved.getId(), "STORY_POINTS_CHANGE",
+                String.valueOf(oldStoryPoints), String.valueOf(newStoryPoints),
+                "Story points updated from " + oldStoryPoints + " to " + newStoryPoints);
+        }
+
+        Long oldSprintId = oldSprint != null ? oldSprint.getId() : null;
+        Long newSprintId = saved.getSprint() != null ? saved.getSprint().getId() : null;
+        if (!java.util.Objects.equals(oldSprintId, newSprintId)) {
+            taskHistoryService.log(saved.getId(), "SPRINT_CHANGE",
+                oldSprint != null ? oldSprint.getName() : "Backlog",
+                saved.getSprint() != null ? saved.getSprint().getName() : "Backlog");
+
+            if (oldSprint != null && "ACTIVE".equalsIgnoreCase(oldSprint.getStatus())) {
+                sprintScopeChangeService.recordScopeChange(
+                    oldSprint.getId(), saved.getId(),
+                    SprintScopeChangeService.formatTaskKey(saved), saved.getTitle(),
+                    "TASK_REMOVED", oldStoryPoints, 0,
+                    -oldStoryPoints, "Task removed from active sprint"
+                );
+            }
+            if (saved.getSprint() != null && "ACTIVE".equalsIgnoreCase(saved.getSprint().getStatus())) {
+                sprintScopeChangeService.recordScopeChange(
+                    saved.getSprint().getId(), saved.getId(),
+                    SprintScopeChangeService.formatTaskKey(saved), saved.getTitle(),
+                    "TASK_ADDED", 0, newStoryPoints,
+                    newStoryPoints, "Task added to active sprint"
+                );
+            }
+        } else if (saved.getSprint() != null && "ACTIVE".equalsIgnoreCase(saved.getSprint().getStatus())) {
+            if (!java.util.Objects.equals(oldStoryPoints, newStoryPoints)) {
+                int diff = newStoryPoints - oldStoryPoints;
+                String changeType = diff > 0 ? "POINTS_INCREASED" : "POINTS_DECREASED";
+                sprintScopeChangeService.recordScopeChange(
+                    saved.getSprint().getId(), saved.getId(),
+                    SprintScopeChangeService.formatTaskKey(saved), saved.getTitle(),
+                    changeType, oldStoryPoints, newStoryPoints,
+                    diff, "Story points revised from " + oldStoryPoints + " to " + newStoryPoints
+                );
+            }
+        }
+
         if (!java.util.Objects.equals(saved.getStatus(), oldStatus)) {
 
             activityLogService.log(
@@ -669,6 +766,14 @@ public class TaskService {
             syncEpicStatus(saved.getParentTask().getId());
         }
 
+        if (saved.getProject() != null) {
+            try {
+                budgetCalculationService.recalculateProjectBudget(saved.getProject().getId(), false);
+            } catch (Exception e) {
+                // Safe fallback
+            }
+        }
+
         return saved;
     }
 
@@ -709,7 +814,19 @@ public class TaskService {
     @org.springframework.transaction.annotation.Transactional
     public void deleteTask(Long id) {
         Task task = taskRepository.findById(id).orElseThrow();
+        Long projectId = task.getProject() != null ? task.getProject().getId() : null;
         Long parentId = task.getParentTask() != null ? task.getParentTask().getId() : null;
+
+        // Record scope change if deleted from an ACTIVE sprint
+        if (task.getSprint() != null && "ACTIVE".equalsIgnoreCase(task.getSprint().getStatus())) {
+            int pts = task.getStoryPoints() != null ? task.getStoryPoints() : 0;
+            sprintScopeChangeService.recordScopeChange(
+                task.getSprint().getId(), task.getId(),
+                SprintScopeChangeService.formatTaskKey(task), task.getTitle(),
+                "TASK_REMOVED", pts, 0,
+                -pts, "Task deleted from active sprint"
+            );
+        }
 
         // Defensive: Clear collections and relationships to avoid FK issues
         task.setSprint(null);
@@ -735,6 +852,14 @@ public class TaskService {
 
         if (parentId != null) {
             syncEpicStatus(parentId);
+        }
+
+        if (projectId != null) {
+            try {
+                budgetCalculationService.recalculateProjectBudget(projectId, false);
+            } catch (Exception e) {
+                // Safe fallback
+            }
         }
     }
 

@@ -8,6 +8,7 @@ import com.flowtrack.repository.UserRepository;
 import com.flowtrack.repository.WorkLogRepository;
 import com.flowtrack.service.ActivityLogService;
 import com.flowtrack.service.NotificationService;
+import com.flowtrack.service.BudgetCalculationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,9 @@ public class WorkLogController {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private BudgetCalculationService budgetCalculationService;
 
     @GetMapping("/tasks/{taskId}/work-logs")
     public List<WorkLog> getWorkLogsByTask(@PathVariable Long taskId) {
@@ -228,5 +232,13 @@ public class WorkLogController {
         task.setRemainingEstimateSeconds(Math.max(0L, original - totalSpent));
         
         taskRepository.save(task);
+
+        if (task.getProject() != null) {
+            try {
+                budgetCalculationService.recalculateProjectBudget(task.getProject().getId(), false);
+            } catch (Exception e) {
+                // Safe fallback
+            }
+        }
     }
 }

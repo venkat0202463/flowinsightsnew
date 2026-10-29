@@ -39,6 +39,10 @@ public class ProjectController {
         project.setProjectType(projectRequest.getProjectType());
         project.setCategory(projectRequest.getCategory());
         project.setTeamMembers(projectRequest.getTeamMembers());
+        if (projectRequest.getTotalBudget() != null) project.setTotalBudget(projectRequest.getTotalBudget());
+        if (projectRequest.getContingencyPercent() != null) project.setContingencyPercent(projectRequest.getContingencyPercent());
+        if (projectRequest.getDefaultHourlyRate() != null) project.setDefaultHourlyRate(projectRequest.getDefaultHourlyRate());
+        if (projectRequest.getBudgetAllocationMethod() != null) project.setBudgetAllocationMethod(projectRequest.getBudgetAllocationMethod());
         Long leadId = projectRequest.getLeadId() != null ? projectRequest.getLeadId() : userDetails.getId();
         return projectService.createProject(project, leadId);
     }
@@ -54,6 +58,10 @@ public class ProjectController {
         project.setProjectType(projectRequest.getProjectType());
         project.setCategory(projectRequest.getCategory());
         project.setTeamMembers(projectRequest.getTeamMembers());
+        if (projectRequest.getTotalBudget() != null) project.setTotalBudget(projectRequest.getTotalBudget());
+        if (projectRequest.getContingencyPercent() != null) project.setContingencyPercent(projectRequest.getContingencyPercent());
+        if (projectRequest.getDefaultHourlyRate() != null) project.setDefaultHourlyRate(projectRequest.getDefaultHourlyRate());
+        if (projectRequest.getBudgetAllocationMethod() != null) project.setBudgetAllocationMethod(projectRequest.getBudgetAllocationMethod());
         return ResponseEntity.ok(projectService.updateProject(id, project, projectRequest.getLeadId()));
     }
 
